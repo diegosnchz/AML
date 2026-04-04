@@ -98,17 +98,10 @@ services:
       - ./outputs:/opt/amlguardian/outputs
       - ./.env:/opt/amlguardian/.env:ro
     command: >
-      bash -c "
-      mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/amlguardian/outputs &&
-      airflow db migrate &&
-      airflow users create
-      --username ${AIRFLOW_ADMIN_USERNAME}
-      --password ${AIRFLOW_ADMIN_PASSWORD}
-      --firstname AML
-      --lastname Guardian
-      --role Admin
-      --email ${AIRFLOW_ADMIN_EMAIL}
-      "
+      bash -c "mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/amlguardian/outputs
+      && airflow db migrate
+      && (airflow users delete --username ${AIRFLOW_ADMIN_USERNAME} || true)
+      && airflow users create --username ${AIRFLOW_ADMIN_USERNAME} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname AML --lastname Guardian --role Admin --email ${AIRFLOW_ADMIN_EMAIL}"
 
   airflow-webserver:
     build:
