@@ -1,0 +1,37 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Full Stack",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "-d"],
+      "port": 8080,
+      "autoPort": false
+    },
+    {
+      "name": "Airflow Webserver",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "postgres", "airflow-init", "airflow-webserver", "airflow-scheduler"],
+      "port": 8080,
+      "autoPort": false
+    },
+    {
+      "name": "pgAdmin",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "postgres", "pgadmin"],
+      "port": 5050
+    },
+    {
+      "name": "Neo4j Browser",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "neo4j"],
+      "port": 7474
+    },
+    {
+      "name": "PostgreSQL",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "postgres"],
+      "port": 5432
+    }
+  ]
+}

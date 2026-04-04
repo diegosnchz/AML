@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":8080\")",
+      "Bash(tasklist /FI \"PID eq 11648\" /FO LIST)",
+      "Bash(tasklist /FI \"PID eq 32148\" /FO LIST)",
+      "Bash(powershell -Command \"Get-Process -Id 11648, 32148 | Select-Object Id, ProcessName, MainWindowTitle\")",
+      "Bash(docker ps:*)"
+    ]
+  }
+}
