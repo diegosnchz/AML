@@ -1,0 +1,13 @@
+FROM apache/airflow:2.8.4-python3.11
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential gcc g++ libpq-dev git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r /tmp/requirements.txt
+

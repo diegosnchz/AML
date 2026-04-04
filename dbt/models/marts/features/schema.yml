@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: fct_account_features
+    description: Account-level AML feature mart combining transactional volume, behavioral patterns, exposure breadth, and validation labels.
+    columns:
+      - name: account_id
+        description: Unique account identifier from the account master table.
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: total_sent
+        description: Total EUR amount sent by the account across the full dataset.
+        tests:
+          - not_null
+      - name: total_received
+        description: Total EUR amount received by the account across the full dataset.
+        tests:
+          - not_null
+      - name: n_transactions
+        description: Count of sent and received transactions involving the account.
+        tests:
+          - not_null
+      - name: avg_amount_sent
+        description: Average EUR amount across sent transactions only.
+        tests:
+          - not_null
+      - name: stddev_amount_sent
+        description: Standard deviation of sent EUR amounts.
+        tests:
+          - not_null
+      - name: n_unique_counterparts
+        description: Count of unique counterpart accounts interacting with the account.
+        tests:
+          - not_null
+      - name: n_countries_transacted
+        description: Count of distinct counterpart countries linked to the account.
+        tests:
+          - not_null
+      - name: ratio_night_transactions
+        description: Share of transactions occurring between 00:00 and 06:00 UTC.
+        tests:
+          - not_null
+      - name: max_single_transaction
+        description: Largest single transaction amount involving the account.
+        tests:
+          - not_null
+      - name: velocity_7d
+        description: Total EUR amount sent by the account over the latest seven-day observation window.
+        tests:
+          - not_null
+      - name: is_laundering_any
+        description: Validation-only target indicating whether the account appears in any positive-labelled transaction.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+

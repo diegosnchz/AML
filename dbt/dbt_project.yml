@@ -1,0 +1,31 @@
+name: amlguardian
+version: 1.0.0
+config-version: 2
+
+profile: amlguardian
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+models:
+  amlguardian:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +schema: staging
+      +materialized: table
+    marts:
+      features:
+        +schema: features
+        +materialized: table
+      alerts:
+        +schema: alerts
+        +materialized: table
+

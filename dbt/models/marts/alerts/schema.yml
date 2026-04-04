@@ -1,0 +1,329 @@
+version: 2
+
+models:
+  - name: alert_smurfing
+    description: Detects structuring behavior where an account repeatedly sends sub-threshold payments inside a 72-hour horizon.
+    columns:
+      - name: alert_id
+        description: Deterministic alert identifier.
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: Account that triggered the smurfing pattern.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_type
+        description: AML typology code for the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['SMURFING']
+      - name: severity
+        description: Risk-based severity assigned to the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: detected_at
+        description: Timestamp when the suspicious pattern was observed.
+        tests:
+          - not_null
+      - name: amount_involved
+        description: EUR amount linked to the suspicious structuring window.
+        tests:
+          - not_null
+      - name: description
+        description: Human-readable explanation of why the alert fired.
+        tests:
+          - not_null
+
+  - name: alert_fan_out
+    description: Detects single-origin accounts dispersing money to many beneficiaries in a short time window.
+    columns:
+      - name: alert_id
+        description: Deterministic alert identifier.
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: Account that triggered the fan-out pattern.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_type
+        description: AML typology code for the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['FAN_OUT']
+      - name: severity
+        description: Risk-based severity assigned to the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: detected_at
+        description: Timestamp when the suspicious pattern was observed.
+        tests:
+          - not_null
+      - name: amount_involved
+        description: EUR amount linked to the suspicious fan-out window.
+        tests:
+          - not_null
+      - name: description
+        description: Human-readable explanation of why the alert fired.
+        tests:
+          - not_null
+
+  - name: alert_fan_in
+    description: Detects sink accounts rapidly aggregating funds from many unrelated originators.
+    columns:
+      - name: alert_id
+        description: Deterministic alert identifier.
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: Account that triggered the fan-in pattern.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_type
+        description: AML typology code for the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['FAN_IN']
+      - name: severity
+        description: Risk-based severity assigned to the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: detected_at
+        description: Timestamp when the suspicious pattern was observed.
+        tests:
+          - not_null
+      - name: amount_involved
+        description: EUR amount linked to the suspicious fan-in window.
+        tests:
+          - not_null
+      - name: description
+        description: Human-readable explanation of why the alert fired.
+        tests:
+          - not_null
+
+  - name: alert_circular
+    description: Detects three-hop circular movement where funds return to the originating account inside seven days.
+    columns:
+      - name: alert_id
+        description: Deterministic alert identifier.
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: Account that triggered the circular flow pattern.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_type
+        description: AML typology code for the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['CIRCULAR']
+      - name: severity
+        description: Risk-based severity assigned to the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: detected_at
+        description: Timestamp when the circular pattern completed.
+        tests:
+          - not_null
+      - name: amount_involved
+        description: EUR amount linked to the circular sequence.
+        tests:
+          - not_null
+      - name: description
+        description: Human-readable explanation of why the alert fired.
+        tests:
+          - not_null
+
+  - name: alert_layering
+    description: Detects sequential transfer chains with step-down amounts consistent with layering commissions.
+    columns:
+      - name: alert_id
+        description: Deterministic alert identifier.
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: Account that triggered the layering pattern.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_type
+        description: AML typology code for the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LAYERING']
+      - name: severity
+        description: Risk-based severity assigned to the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: detected_at
+        description: Timestamp when the layering chain reached its final hop.
+        tests:
+          - not_null
+      - name: amount_involved
+        description: EUR amount linked to the layering chain.
+        tests:
+          - not_null
+      - name: description
+        description: Human-readable explanation of why the alert fired.
+        tests:
+          - not_null
+
+  - name: alert_high_risk_geography
+    description: Detects accounts transacting with a hardcoded high-risk jurisdiction watchlist used for enhanced due diligence.
+    columns:
+      - name: alert_id
+        description: Deterministic alert identifier.
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: Account exposed to a high-risk geography.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_type
+        description: AML typology code for the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['HIGH_RISK_GEOGRAPHY']
+      - name: severity
+        description: Risk-based severity assigned to the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: detected_at
+        description: Timestamp when the high-risk geography exposure was last observed.
+        tests:
+          - not_null
+      - name: amount_involved
+        description: EUR amount linked to the geography exposure.
+        tests:
+          - not_null
+      - name: description
+        description: Human-readable explanation of why the alert fired.
+        tests:
+          - not_null
+
+  - name: fct_alerts
+    description: Unioned account-level alert fact table across all AML detection rules.
+    columns:
+      - name: alert_id
+        description: Deterministic alert identifier across all rule models.
+        tests:
+          - not_null
+          - unique
+      - name: account_id
+        description: Account associated with the alert.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_type
+        description: AML typology code associated with the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['SMURFING', 'FAN_OUT', 'FAN_IN', 'CIRCULAR', 'LAYERING', 'HIGH_RISK_GEOGRAPHY']
+      - name: severity
+        description: Final severity assigned to the alert.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: detected_at
+        description: Pattern detection timestamp.
+        tests:
+          - not_null
+      - name: amount_involved
+        description: Estimated EUR amount associated with the detection event.
+        tests:
+          - not_null
+      - name: description
+        description: Human-readable rationale for the alert.
+        tests:
+          - not_null
+
+  - name: fct_sar_candidates
+    description: Accounts recommended for SAR review because they breached multi-alert or CRITICAL severity thresholds.
+    columns:
+      - name: account_id
+        description: Account recommended for escalation.
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: alert_count
+        description: Number of alerts linked to the candidate account.
+        tests:
+          - not_null
+      - name: critical_alert_count
+        description: Number of CRITICAL alerts linked to the candidate account.
+        tests:
+          - not_null
+      - name: max_severity
+        description: Highest alert severity observed for the account.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      - name: alert_types
+        description: Comma-delimited list of alert typologies associated with the account.
+        tests:
+          - not_null
+      - name: first_alert_at
+        description: Timestamp of the first observed alert for the account.
+        tests:
+          - not_null
+      - name: latest_alert_at
+        description: Timestamp of the most recent alert for the account.
+        tests:
+          - not_null
+      - name: total_amount_involved
+        description: Sum of EUR amounts across linked alerts.
+        tests:
+          - not_null
+      - name: sar_rationale
+        description: Human-readable explanation for SAR escalation.
+        tests:
+          - not_null
+

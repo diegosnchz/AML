@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw landing tables populated by the AMLGuardian ingestion pipeline.
+    database: "{{ env_var('POSTGRES_DB', 'amlguardian') }}"
+    schema: raw
+    tables:
+      - name: transactions
+        description: Raw synthetic banking transactions as ingested from the IBM AML dataset.
+      - name: accounts
+        description: Raw account master data as ingested from the IBM AML dataset.
+

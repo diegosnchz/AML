@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: stg_transactions
+    description: Cleaned and deduplicated transaction feed in UTC with EUR-normalized amounts.
+    columns:
+      - name: transaction_id
+        description: Unique transaction identifier from the source file.
+        tests:
+          - not_null
+          - unique
+      - name: transaction_timestamp_utc
+        description: Transaction event timestamp normalized to UTC.
+        tests:
+          - not_null
+      - name: sender_account_id
+        description: Sending account identifier.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: receiver_account_id
+        description: Receiving account identifier.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts')
+              field: account_id
+      - name: amount_original
+        description: Original amount in the source transaction currency.
+        tests:
+          - not_null
+      - name: amount_eur
+        description: Transaction amount normalized to EUR using the ingestion exchange-rate map.
+        tests:
+          - not_null
+      - name: currency
+        description: ISO currency code provided in the source.
+        tests:
+          - not_null
+      - name: transaction_type
+        description: Normalized transaction type label.
+        tests:
+          - not_null
+      - name: is_laundering
+        description: Synthetic laundering label retained for validation only.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+      - name: ingestion_timestamp
+        description: UTC timestamp when the row was ingested into PostgreSQL.
+        tests:
+          - not_null
+
+  - name: stg_accounts
+    description: Cleaned and deduplicated account master table.
+    columns:
+      - name: account_id
+        description: Unique account identifier.
+        tests:
+          - not_null
+          - unique
+      - name: account_name
+        description: Account or customer display name.
+        tests:
+          - not_null
+      - name: country
+        description: ISO-style country label for the account domicile.
+        tests:
+          - not_null
+      - name: account_type
+        description: Normalized account classification.
+        tests:
+          - not_null
+      - name: ingestion_timestamp
+        description: UTC timestamp when the account row was ingested.
+        tests:
+          - not_null
+
