@@ -1,3 +1,11 @@
+{{
+  config(
+    post_hook=[
+      "CREATE INDEX IF NOT EXISTS idx_fct_account_features_account_id ON {{ this }} (account_id)",
+      "ANALYZE {{ this }}"
+    ]
+  )
+}}
 with account_transactions as (
     select
         sender_account_id as account_id,
@@ -19,6 +27,9 @@ with account_transactions as (
         'RECEIVED' as transaction_direction
     from {{ ref('stg_transactions') }}
 ),
+-- dataset_max_timestamp: scalar subquery used as a cross join to compute
+-- velocity_7d relative to the dataset horizon rather than wall-clock time.
+-- This avoids incorrect zeroing of velocity for historical datasets.
 dataset_max_timestamp as (
     select max(transaction_timestamp_utc) as max_transaction_timestamp
     from {{ ref('stg_transactions') }}

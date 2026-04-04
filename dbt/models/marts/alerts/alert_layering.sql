@@ -1,3 +1,5 @@
+-- Lookback window controlled by dbt variable alert_lookback_days (default: 90).
+-- Override at runtime: dbt run --vars '{"alert_lookback_days": 180}'
 with recursive chains as (
     select
         t.transaction_id as root_transaction_id,
@@ -12,6 +14,7 @@ with recursive chains as (
         1 as depth
     from {{ ref('stg_transactions') }} t
     where t.sender_account_id <> t.receiver_account_id
+      and t.transaction_timestamp_utc >= current_timestamp - interval '{{ var("alert_lookback_days") }} days'
 
     union all
 

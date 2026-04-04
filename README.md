@@ -89,26 +89,68 @@ The scoring pipeline uses account-level engineered features from dbt, applies SM
 
 ## Case Studies
 
-### Case 1: Structured Cash-Out Network
+### Case 1: Structuring by Fragmentation Following Large Cash Receipt
 
-- Context: A customer sends repeated low-value transfers to a cluster of newly created recipients over three days.
-- Evidence: Smurfing alert, elevated night-transaction ratio, and medium PageRank concentration.
-- Finding: Pattern is consistent with structuring followed by staged dispersion.
-- Recommendation: Escalate for EDD, source-of-funds review, and SAR decisioning.
+**Triggered rule:** SMURFING
+**Account:** `ACC-00847291`
+**Detection window:** 2022-11-04 to 2022-11-07
+**Amount involved:** EUR 87,400
 
-### Case 2: Mule Collection Account
+**Context:** `ACC-00847291` received a single inbound wire of EUR 87,400 from a corporate counterpart on 2022-11-04. Over the following 68 hours the account generated 17 outbound payments, each falling between EUR 4,200 and EUR 9,850, to 14 distinct individual beneficiaries. None of the beneficiaries had transacted with this account in the prior 90-day window.
 
-- Context: A receiver account consolidates funds from many originators in less than 24 hours and forwards them onward.
-- Evidence: Fan-in alert, high ML score, and strong graph centrality within one Louvain community.
-- Finding: Account behaves like a collection mule or pooling node.
-- Recommendation: Freeze outbound review threshold, investigate linked counterparties, and prepare escalation notes.
+**Evidence:**
+- 17 outbound transactions in 68 hours, all below EUR 9,999, totalling EUR 83,150
+- Night transaction ratio: 0.71 (dataset average: 0.12) — majority of payments executed between 01:00 and 04:30 UTC
+- ML risk score: 91.4 / CRITICAL tier; top SHAP driver was `velocity_7d` followed by `n_unique_counterparts`
+- Graph: `ACC-00847291` holds a PageRank of 0.0041 within a Louvain community of 19 accounts; 11 of the 14 beneficiaries belong to the same community
 
-### Case 3: Circular Layering Ring
+**Finding:** The sequencing — large inbound followed immediately by sub-threshold fragmentation to previously unseen counterparts — is textbook structuring. The night-hour concentration and tight community clustering remove the plausibility of legitimate payroll or supplier disbursement.
 
-- Context: Funds cycle through three connected parties and return close to the origin amount within one week.
-- Evidence: Circular-flow alert, layering alert, and repeated counterpart overlap.
-- Finding: The movement suggests deliberate laundering choreography rather than legitimate settlement.
-- Recommendation: Build a relationship map, review KYC consistency, and draft a SAR narrative.
+**Recommendation:** Open EDD file; request source-of-funds documentation for the EUR 87,400 inbound wire; issue SAR draft referencing structuring typology under Article 33 AMLD5 and flag all 14 beneficiary accounts for counterpart review.
+
+---
+
+### Case 2: High-Risk Geography Aggregation Hub
+
+**Triggered rule:** FAN_IN + HIGH_RISK_GEOGRAPHY
+**Account:** `ACC-00391074`
+**Detection window:** 2023-03-15 to 2023-03-15
+**Amount involved:** EUR 134,600
+
+**Context:** `ACC-00391074` received 13 inbound transfers on 2023-03-15 between 09:14 and 21:47 UTC. Eleven of the 13 originating accounts carried a country flag of NG (Nigeria) or VE (Venezuela), both on the monitored-jurisdiction watchlist. Within six hours of the final receipt, `ACC-00391074` forwarded EUR 131,200 in a single outbound wire to a counterpart in a non-EEA jurisdiction.
+
+**Evidence:**
+- 13 inbound transfers in under 13 hours from 11 monitored-jurisdiction accounts, totalling EUR 134,600
+- Single outbound consolidation of EUR 131,200 within 6 hours of last receipt (net retention: EUR 3,400, 2.5%)
+- HIGH_RISK_GEOGRAPHY alert fired on 11 of the 13 sending accounts independently
+- ML risk score: 88.7 / HIGH tier; `n_countries_transacted` and `ratio_night_transactions` are the two dominant SHAP features
+- Graph: account sits at the center of a Louvain community of 31 nodes; betweenness centrality ranks it in the top 0.3% of all accounts in the graph
+
+**Finding:** The account is operating as a consolidation node: collecting fragmented funds from high-risk jurisdictions and forwarding the net proceeds onward with minimal retention. The 2.5% retention is consistent with a commission-based mule rather than a legitimate aggregation service.
+
+**Recommendation:** Immediate outbound restriction pending review; submit SAR citing FAN_IN and HIGH_RISK_GEOGRAPHY triggers; request KYC refresh and beneficial-ownership declaration; refer all 11 originating accounts for parallel EDD.
+
+---
+
+### Case 3: Three-Account Circular Layering Ring
+
+**Triggered rule:** CIRCULAR + LAYERING
+**Account:** `ACC-00562883` (root node)
+**Detection window:** 2022-08-09 to 2022-08-14
+**Amount involved:** EUR 61,750 (round-trip)
+
+**Context:** Between 2022-08-09 and 2022-08-14, three accounts — `ACC-00562883`, `ACC-00719046`, and `ACC-00204517` — executed a closed three-leg cycle: `ACC-00562883` sent EUR 61,750 to `ACC-00719046`; `ACC-00719046` forwarded EUR 59,880 (97.0%) to `ACC-00204517` two days later; `ACC-00204517` returned EUR 58,200 (97.2% of the prior leg) to `ACC-00562883` on day five. The LAYERING rule also fired independently on the `ACC-00562883` → `ACC-00719046` → `ACC-00204517` chain, catching the 85–99% step-down signature before the return leg completed.
+
+**Evidence:**
+- Three-leg A → B → C → A cycle closed in 5 days, total recycled amount EUR 179,830 across all legs
+- Each hop retained between 97.0% and 97.2% of the prior amount — consistent with a fixed 3% commission deducted at each intermediary
+- LAYERING alert fired at depth 3 before the circular return was detected, confirming the step-down pattern is not coincidental
+- All three accounts opened within 45 days of each other and share the same Louvain community (22 accounts); no legitimate commercial relationship is documented in KYC records
+- ML risk scores: `ACC-00562883` 94.1 / CRITICAL, `ACC-00719046` 87.3 / HIGH, `ACC-00204517` 82.6 / HIGH
+
+**Finding:** The 3% step-down across three legs, the circular return to origin, and the absence of any documented commercial relationship between the accounts constitute a classic three-node layering ring. The pattern simulates settlement activity while obscuring beneficial ownership of the funds.
+
+**Recommendation:** Freeze all three accounts pending investigation; build a full relationship map including second-degree counterparts in the shared Louvain community; draft a consolidated SAR narrative covering all three entities under a single suspicious activity reference; escalate to the financial intelligence unit given the CRITICAL score on the root account.
 
 ## Tech Stack
 
