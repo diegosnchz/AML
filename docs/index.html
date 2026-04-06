@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="GraphGuard — End-to-end AML transaction monitoring platform. 6 detection typologies, graph analytics, ML risk scoring." />
+  <title>GraphGuard | Financial Crime Detection Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+  /* ===== TOKENS ===== */
+  :root {
+    --parchment:   #f2ecde;
+    --parchment-2: #f7f3e8;
+    --parchment-3: #ece6d6;
+    --ink:         #1c1a16;
+    --ink-dim:     #6e6a61;
+    --ink-faint:   #a8a49c;
+    --gold:        #c8860a;
+    --gold-dim:    rgba(200,134,10,0.12);
+    --rust:        #b05230;
+    --rust-dim:    rgba(176,82,48,0.1);
+    --crimson:     #922b2b;
+    --crimson-dim: rgba(146,43,43,0.1);
+    --teal:        #7a5c3e;
+    --border:      rgba(20,20,19,0.14);
+    --border-mid:  rgba(20,20,19,0.22);
+    --serif:       'Cormorant Garamond', Georgia, serif;
+    --sans:        'Instrument Sans', sans-serif;
+  }
+
+  /* ===== RESET ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    background: var(--parchment);
+    color: var(--ink);
+    line-height: 1.65;
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 9999;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ===== LAYOUT ===== */
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 40px; }
+  section { padding: 100px 0; }
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--gold);
+  }
+  .section-heading {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .section-sub {
+    font-size: 15px;
+    color: var(--ink-dim);
+    max-width: 480px;
+    line-height: 1.75;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    padding: 0 40px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(233,229,216,0.88);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-logo {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .header-logo-mark {
+    width: 20px; height: 20px;
+    background: var(--ink);
+    clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    flex-shrink: 0;
+  }
+  .logo-text { display: flex; align-items: baseline; gap: 0; }
+  .logo-graph {
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .logo-guard {
+    color: var(--rust);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .header-nav { display: flex; align-items: center; gap: 32px; }
+  .header-nav a {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-dim);
+    transition: color 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .header-nav a:hover { color: var(--ink); }
+  .header-cta {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    border: 1px solid var(--border-mid);
+    padding: 7px 18px;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+    background: transparent;
+  }
+  .header-cta:hover {
+    background: var(--ink);
+    color: var(--parchment);
+    border-color: var(--ink);
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 80px 0 80px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  /* Dot grid background */
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(20,20,19,0.18) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  /* Large faint network pattern */
+  .hero-network {
+    position: absolute;
+    top: 60px; right: -60px;
+    width: 600px; height: 600px;
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    animation: fadeUp 1s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+  }
+  .hero-tag-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.85)} }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(68px, 10vw, 148px);
+    font-weight: 700;
+    line-height: 0.88;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+  .hero-title .title-graph {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .hero-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--rust);
+    letter-spacing: -0.01em;
+  }
+  .hero-subtitle {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .hero-subtitle::before,
+  .hero-subtitle::after {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 1px;
+    background: var(--border-mid);
+    flex-shrink: 0;
+  }
+  .hero-rule {
+    width: 60px; height: 1px;
+    background: var(--border-mid);
+    margin-bottom: 28px;
+  }
+  .hero-desc {
+    font-size: 17px;
+    color: var(--ink-dim);
+    max-width: 520px;
+    line-height: 1.75;
+    margin-bottom: 48px;
+    font-family: var(--serif);
+    font-style: italic;
+  }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 60px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-family: var(--sans);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .btn-dark {
+    background: var(--ink);
+    color: var(--parchment);
+    border: 1px solid var(--ink);
+  }
+  .btn-dark:hover { background: #2c2b29; border-color: #2c2b29; }
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--border-mid);
+  }
+  .btn-outline:hover { border-color: var(--ink); }
+  .hero-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .hero-badge {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    background: rgba(20,20,19,0.04);
+  }
+  /* Hero bottom stats strip */
+  .hero-strip {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: rgba(233,229,216,0.6);
+    backdrop-filter: blur(8px);
+    z-index: 2;
+  }
+  .hero-strip-item {
+    flex: 1;
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .hero-strip-item:last-child { border-right: none; }
+  .hero-strip-num {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .hero-strip-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  /* ===== ARCHITECTURE ===== */
+  .architecture { background: var(--parchment-3); border-bottom: 1px solid var(--border); }
+  .arch-panel {
+    border: 1px solid var(--border-mid);
+    background: var(--parchment-2);
+    overflow: hidden;
+    margin-top: 48px;
+  }
+  .arch-panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(20,20,19,0.03);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .arch-panel-title {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .arch-tags { display: flex; gap: 8px; }
+  .arch-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border: 1px solid var(--border);
+    padding: 2px 10px;
+  }
+  .arch-tag.pass {
+    color: var(--teal);
+    border-color: rgba(122,92,62,0.3);
+    background: rgba(122,92,62,0.06);
+  }
+  .arch-svg-wrap { overflow-x: auto; }
+
+  /* ===== TYPOLOGIES ===== */
+  .typologies-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    border: 1px solid var(--border);
+    margin-top: 56px;
+  }
+  .typology-card {
+    padding: 36px 28px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    transition: background 0.25s;
+    background: var(--parchment-2);
+  }
+  .typology-card:hover { background: var(--parchment); }
+  .typology-card:nth-child(3n) { border-right: none; }
+  .typology-card:nth-child(n+4) { border-bottom: none; }
+  .typology-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+  }
+  .typology-card.sev-critical::after { background: var(--crimson); }
+  .typology-card.sev-high::after     { background: var(--rust); }
+  .typology-icon {
+    width: 28px; height: 28px;
+    color: var(--ink-faint);
+    margin-bottom: 20px;
+  }
+  .typology-name {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .typology-desc {
+    font-size: 13px;
+    color: var(--ink-dim);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .typology-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .sev-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border: 1px solid;
+  }
+  .sev-badge.critical {
+    color: var(--crimson);
+    border-color: var(--crimson);
+    background: var(--crimson-dim);
+    animation: stampPulse 3s ease-in-out infinite;
+  }
+  @keyframes stampPulse { 0%,100%{box-shadow:0 0 0 0 rgba(155,46,46,0)} 50%{box-shadow:0 0 0 4px rgba(155,46,46,0.07)} }
+  .sev-badge.high { color: var(--rust); border-color: var(--rust); background: var(--rust-dim); }
+  .typology-param { font-size: 11px; color: var(--teal); font-weight: 500; letter-spacing: 0.04em; }
+
+  /* ===== CASE STUDIES ===== */
+  .case-studies { background: var(--parchment-3); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .cases-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 56px; }
+  .case-card {
+    background: var(--parchment-2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .case-card:hover { border-color: var(--border-mid); box-shadow: 0 4px 24px rgba(20,20,19,0.06); }
+  .case-card.open { border-color: var(--gold); box-shadow: 0 4px 24px rgba(20,20,19,0.08); }
+  .case-header { padding: 22px 22px 40px; border-bottom: 1px solid var(--border); position: relative; }
+  .case-card.open .case-header { border-color: rgba(212,146,10,0.2); }
+  .case-meta-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 8px; }
+  .case-id { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
+  .case-stamp {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1.5px solid;
+    flex-shrink: 0;
+  }
+  .case-stamp.critical { color: var(--crimson); border-color: var(--crimson); background: var(--crimson-dim); animation: stampPulse 3s ease-in-out infinite; }
+  .case-stamp.high     { color: var(--rust); border-color: var(--rust); background: var(--rust-dim); }
+  .case-rules { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
+  .case-rule-tag {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--teal); border: 1px solid rgba(122,92,62,0.3);
+    padding: 2px 7px; background: rgba(122,92,62,0.06); text-transform: uppercase;
+  }
+  .case-title { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.3; margin-bottom: 5px; }
+  .case-acct { font-size: 11px; color: var(--ink-dim); letter-spacing: 0.08em; font-weight: 500; }
+  .case-toggle {
+    position: absolute; bottom: 14px; right: 16px;
+    width: 24px; height: 24px;
+    border: 1px solid var(--border-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--ink-dim);
+    transition: all 0.2s; background: var(--parchment);
+    user-select: none;
+  }
+  .case-card.open .case-toggle { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+  .case-body { max-height: 0; overflow: hidden; transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1); }
+  .case-body.open { max-height: 700px; }
+  .case-section { padding: 16px 22px; border-bottom: 1px solid var(--border); }
+  .case-section:last-child { border-bottom: none; }
+  .case-section-title { font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 12px; }
+  .case-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid rgba(20,20,19,0.04); gap: 8px; }
+  .case-row:last-child { border-bottom: none; }
+  .case-key { font-size: 12px; color: var(--ink-dim); flex-shrink: 0; }
+  .case-val { font-size: 12px; color: var(--ink); font-weight: 600; text-align: right; word-break: break-word; line-height: 1.4; }
+  .case-val.c-crim  { color: var(--crimson); }
+  .case-val.c-rust  { color: var(--rust); }
+  .case-val.c-teal  { color: var(--teal); }
+  .score-bar { height: 2px; background: var(--border); margin-top: 6px; overflow: hidden; }
+  .score-fill.crit { height: 100%; background: var(--crimson); }
+  .score-fill.high { height: 100%; background: var(--rust); }
+  .rec-list { list-style: none; margin-top: 8px; }
+  .rec-list li { font-size: 12px; color: var(--ink-dim); padding: 3px 0 3px 16px; position: relative; line-height: 1.5; }
+  .rec-list li::before { content: '→'; position: absolute; left: 0; color: var(--gold); font-size: 11px; }
+
+  /* ===== TECH STACK ===== */
+  .tech-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    border: 1px solid var(--border);
+    margin-top: 56px;
+  }
+  .tech-col {
+    padding: 36px 28px;
+    border-right: 1px solid var(--border);
+    background: var(--parchment-2);
+    transition: background 0.2s;
+  }
+  .tech-col:last-child { border-right: none; }
+  .tech-col:hover { background: var(--parchment); }
+  .tech-col-icon {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border-mid);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    background: var(--parchment);
+  }
+  .tech-col-role { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+  .tech-col-name { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--ink); margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .tech-items { list-style: none; }
+  .tech-item { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(20,20,19,0.05); font-size: 12px; color: var(--ink-dim); line-height: 1.55; }
+  .tech-item:last-child { border-bottom: none; }
+  .tech-item::before { content: '·'; color: var(--gold); flex-shrink: 0; font-size: 16px; line-height: 1.2; }
+
+  /* ===== STATS ===== */
+  .stats { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 0; background: var(--parchment-2); }
+  .stats-grid { display: grid; grid-template-columns: repeat(6,1fr); }
+  .stat-item { padding: 48px 20px; border-right: 1px solid var(--border); text-align: center; position: relative; }
+  .stat-item:last-child { border-right: none; }
+  .stat-item::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px; background: transparent; transition: background 0.5s;
+  }
+  .stat-item.active::after { background: var(--gold); }
+  .stat-num {
+    font-family: var(--serif); font-size: 56px; font-weight: 700;
+    color: var(--ink); line-height: 1; display: block; margin-bottom: 10px;
+  }
+  .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); line-height: 1.5; }
+  .stat-sub { font-size: 10px; color: var(--gold); margin-top: 4px; font-weight: 600; letter-spacing: 0.08em; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    padding: 80px 0 60px;
+    background: var(--ink);
+    color: var(--parchment);
+  }
+  .footer-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .footer-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  .footer-title { font-family: var(--serif); font-size: clamp(36px, 5vw, 64px); font-weight: 600; line-height: 1; color: var(--parchment); margin-bottom: 20px; letter-spacing: -0.01em; }
+  .footer-title em { font-style: italic; color: var(--rust); }
+  .footer-desc { font-size: 14px; color: rgba(233,229,216,0.6); line-height: 1.75; margin-bottom: 36px; }
+  .footer-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-parchment { background: var(--parchment); color: var(--ink); border: 1px solid var(--parchment); }
+  .btn-parchment:hover { background: #f5f2e8; border-color: #f5f2e8; }
+  .btn-ghost { background: transparent; color: var(--parchment); border: 1px solid rgba(233,229,216,0.3); }
+  .btn-ghost:hover { border-color: rgba(233,229,216,0.6); }
+  .footer-right { padding-left: 40px; border-left: 1px solid rgba(233,229,216,0.1); }
+  .footer-meta-title { font-family: var(--serif); font-size: 18px; font-weight: 600; color: var(--parchment); margin-bottom: 20px; }
+  .footer-links { list-style: none; }
+  .footer-links li { padding: 10px 0; border-bottom: 1px solid rgba(233,229,216,0.08); }
+  .footer-links li:last-child { border-bottom: none; }
+  .footer-links a { font-size: 13px; color: rgba(233,229,216,0.55); transition: color 0.2s; display: flex; align-items: center; justify-content: space-between; }
+  .footer-links a:hover { color: var(--parchment); }
+  .footer-bottom { border-top: 1px solid rgba(233,229,216,0.1); margin-top: 56px; padding-top: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .footer-copy { font-size: 12px; color: rgba(233,229,216,0.35); letter-spacing: 0.05em; }
+  .footer-back { font-size: 12px; color: rgba(233,229,216,0.35); letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; }
+  .footer-back:hover { color: var(--parchment); }
+
+  /* ===== REVEAL ===== */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-d1 { transition-delay: 0.1s; }
+  .reveal-d2 { transition-delay: 0.2s; }
+  .reveal-d3 { transition-delay: 0.3s; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 1024px) {
+    .typologies-grid { grid-template-columns: repeat(2,1fr); }
+    .tech-grid       { grid-template-columns: repeat(2,1fr); }
+    .tech-col:nth-child(2) { border-right: none; }
+    .tech-col:nth-child(3) { border-right: 1px solid var(--border); border-top: 1px solid var(--border); }
+    .tech-col:nth-child(4) { border-right: none; border-top: 1px solid var(--border); }
+    .cases-grid      { grid-template-columns: 1fr; }
+    .stats-grid      { grid-template-columns: repeat(3,1fr); }
+    .stat-item:nth-child(3)  { border-right: none; }
+    .stat-item:nth-child(n+4){ border-top: 1px solid var(--border); }
+    .hero-strip      { display: none; }
+    .footer-inner    { grid-template-columns: 1fr; gap: 48px; }
+    .footer-right    { padding-left: 0; border-left: none; border-top: 1px solid rgba(233,229,216,0.1); padding-top: 40px; }
+  }
+  @media (max-width: 768px) {
+    section { padding: 64px 0; }
+    .container { padding: 0 20px; }
+    .typologies-grid { grid-template-columns: 1fr; }
+    .tech-grid       { grid-template-columns: 1fr; }
+    .tech-col        { border-right: none !important; border-top: 1px solid var(--border); }
+    .tech-col:first-child { border-top: none; }
+    .stats-grid      { grid-template-columns: repeat(2,1fr); }
+    .stat-item:nth-child(2n)  { border-right: none; }
+    .stat-item:nth-child(n+3) { border-top: 1px solid var(--border); }
+    .header-nav { display: none; }
+    .hero-actions { flex-direction: column; align-items: flex-start; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-logo">
+    <div class="header-logo-mark"></div>
+    <span class="logo-text"><span class="logo-graph">Graph</span><span class="logo-guard">Guard</span></span>
+  </div>
+  <nav class="header-nav">
+    <a href="#architecture">Architecture</a>
+    <a href="#typologies">Typologies</a>
+    <a href="#cases">Cases</a>
+    <a href="#stack">Stack</a>
+  </nav>
+  <a href="https://github.com/diegosnchz/AMLGuardian" target="_blank" rel="noopener" class="header-cta">GitHub →</a>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="hero">
+  <div class="hero-grid"></div>
+
+  <!-- Faint network SVG -->
+  <svg class="hero-network" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="250" cy="250" r="8" fill="#141413"/><circle cx="120" cy="140" r="5" fill="#141413"/><circle cx="380" cy="130" r="5" fill="#141413"/>
+    <circle cx="90"  cy="320" r="5" fill="#141413"/><circle cx="420" cy="350" r="5" fill="#141413"/><circle cx="200" cy="420" r="5" fill="#141413"/>
+    <circle cx="330" cy="400" r="4" fill="#141413"/><circle cx="460" cy="220" r="4" fill="#141413"/><circle cx="60"  cy="200" r="4" fill="#141413"/>
+    <circle cx="280" cy="80"  r="4" fill="#141413"/><circle cx="160" cy="370" r="3" fill="#141413"/><circle cx="440" cy="100" r="3" fill="#141413"/>
+    <line x1="250" y1="250" x2="120" y2="140" stroke="#141413" stroke-width="1.5"/>
+    <line x1="250" y1="250" x2="380" y2="130" stroke="#141413" stroke-width="1.5"/>
+    <line x1="250" y1="250" x2="90"  y2="320" stroke="#141413" stroke-width="1.5"/>
+    <line x1="250" y1="250" x2="420" y2="350" stroke="#141413" stroke-width="1.5"/>
+    <line x1="250" y1="250" x2="200" y2="420" stroke="#141413" stroke-width="1.5"/>
+    <line x1="250" y1="250" x2="330" y2="400" stroke="#141413" stroke-width="1"/>
+    <line x1="250" y1="250" x2="460" y2="220" stroke="#141413" stroke-width="1"/>
+    <line x1="120" y1="140" x2="280" y2="80"  stroke="#141413" stroke-width="1"/>
+    <line x1="120" y1="140" x2="60"  y2="200" stroke="#141413" stroke-width="1"/>
+    <line x1="380" y1="130" x2="440" y2="100" stroke="#141413" stroke-width="1"/>
+    <line x1="380" y1="130" x2="460" y2="220" stroke="#141413" stroke-width="1"/>
+    <line x1="90"  y1="320" x2="160" y2="370" stroke="#141413" stroke-width="1"/>
+    <line x1="420" y1="350" x2="330" y2="400" stroke="#141413" stroke-width="1"/>
+    <line x1="200" y1="420" x2="160" y2="370" stroke="#141413" stroke-width="1"/>
+  </svg>
+
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-tag">
+        <span class="hero-tag-dot"></span>
+        System Active — AML Detection Engine v1.0
+      </div>
+      <h1 class="hero-title"><span class="title-graph">Graph</span><em>Guard</em></h1>
+      <p class="hero-subtitle">Financial Crime Detection Engine</p>
+      <div class="hero-rule"></div>
+      <p class="hero-desc">
+        End-to-end AML monitoring platform — 6 detection typologies, graph analytics, ML risk scoring.
+        Built on the IBM AML synthetic dataset with dbt pipelines, Neo4j graph intelligence, and XGBoost.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/diegosnchz/AMLGuardian" target="_blank" rel="noopener" class="btn btn-dark">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 2C6.476 2 2.001 6.475 2.001 12c0 4.425 2.863 8.163 6.838 9.488.5.088.688-.213.688-.475 0-.238-.013-1.025-.013-1.862C7 19.612 6.35 18.538 6.15 17.975c-.113-.288-.6-1.175-1.025-1.413-.35-.187-.85-.65.012-.662.787-.013 1.35.725 1.538 1.025.9 1.512 2.337 1.087 2.9.825.087-.65.35-1.088.637-1.338-2.225-.25-4.525-1.112-4.525-4.937 0-1.088.387-1.988 1.025-2.688-.1-.25-.45-1.275.1-2.662 0 0 .837-.263 2.75 1.025.8-.225 1.65-.338 2.5-.338s1.7.113 2.5.338c1.913-1.3 2.75-1.025 2.75-1.025.55 1.387.2 2.412.1 2.662.637.7 1.025 1.587 1.025 2.688 0 3.837-2.313 4.687-4.513 4.937.363.313.675.913.675 1.85 0 1.337-.012 2.412-.012 2.75 0 .262.187.575.687.475C19.138 20.163 22 16.412 22 12c0-5.525-4.475-10-9.999-10z"/></svg>
+          View on GitHub
+        </a>
+        <a href="#cases" class="btn btn-outline">Explore Cases ↓</a>
+      </div>
+      <div class="hero-badges">
+        <span class="hero-badge">dbt</span>
+        <span class="hero-badge">PostgreSQL</span>
+        <span class="hero-badge">Apache Airflow</span>
+        <span class="hero-badge">Neo4j GDS</span>
+        <span class="hero-badge">XGBoost</span>
+        <span class="hero-badge">Docker</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-strip">
+    <div class="hero-strip-item"><span class="hero-strip-num">6</span><span class="hero-strip-label">Detection typologies</span></div>
+    <div class="hero-strip-item"><span class="hero-strip-num">78</span><span class="hero-strip-label">dbt tests passing</span></div>
+    <div class="hero-strip-item"><span class="hero-strip-num">15</span><span class="hero-strip-label">FATF jurisdictions</span></div>
+    <div class="hero-strip-item"><span class="hero-strip-num">5</span><span class="hero-strip-label">ML models benchmarked</span></div>
+  </div>
+</section>
+
+<!-- ===== ARCHITECTURE ===== -->
+<section class="architecture" id="architecture">
+  <div class="container">
+    <div class="eyebrow reveal">Architecture</div>
+    <h2 class="section-heading reveal">Pipeline Overview</h2>
+    <p class="section-sub reveal">End-to-end data flow from raw IBM AML CSVs to analyst-ready risk signals, orchestrated by Apache Airflow.</p>
+
+    <div class="arch-panel reveal">
+      <div class="arch-panel-header">
+        <span class="arch-panel-title">GraphGuard — System Architecture v1.0</span>
+        <div class="arch-tags">
+          <span class="arch-tag pass">✓ 78/78 Tests</span>
+          <span class="arch-tag">Production</span>
+        </div>
+      </div>
+      <div class="arch-svg-wrap">
+        <svg viewBox="0 0 860 560" xmlns="http://www.w3.org/2000/svg"
+          style="width:100%;min-width:700px;display:block;"
+          font-family="'Instrument Sans', sans-serif"
+          aria-label="GraphGuard end-to-end AML pipeline architecture">
+          <defs>
+            <marker id="arr"       markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="rgba(20,20,19,0.35)"/></marker>
+            <marker id="arr-teal"  markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#7a5c3e"/></marker>
+            <marker id="arr-rust"  markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#b85a35"/></marker>
+            <marker id="arr-green" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#7a5c3e"/></marker>
+            <pattern id="pg" width="24" height="24" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.8" fill="rgba(20,20,19,0.12)"/>
+            </pattern>
+          </defs>
+
+          <rect width="860" height="560" fill="#f3f0e6"/>
+          <rect width="860" height="560" fill="url(#pg)"/>
+
+          <!-- AIRFLOW BAR -->
+          <rect x="12" y="12" width="836" height="42" fill="rgba(212,146,10,0.06)" stroke="rgba(212,146,10,0.5)" stroke-dasharray="8,4" stroke-width="1" rx="1"/>
+          <text x="30" y="30" fill="#d4920a" font-size="10" font-weight="600" letter-spacing="4" opacity="0.9">APACHE AIRFLOW</text>
+          <text x="30" y="45" fill="rgba(212,146,10,0.55)" font-size="7.5" letter-spacing="5">ORCHESTRATION LAYER — ALL DAGs MANAGED</text>
+          <text x="830" y="37" text-anchor="end" fill="rgba(212,146,10,0.4)" font-size="8" letter-spacing="2" font-weight="600">ACTIVE</text>
+          <!-- Airflow drop lines -->
+          <line x1="87"  y1="54" x2="87"  y2="80" stroke="rgba(212,146,10,0.25)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="293" y1="54" x2="293" y2="80" stroke="rgba(212,146,10,0.25)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="523" y1="54" x2="523" y2="67" stroke="rgba(212,146,10,0.25)" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- IBM AML CSVs -->
+          <rect x="20" y="80" width="134" height="58" fill="#f3f0e6" stroke="rgba(20,20,19,0.25)" stroke-width="1" rx="1"/>
+          <text x="87" y="100" text-anchor="middle" fill="rgba(20,20,19,0.4)" font-size="7.5" letter-spacing="3">DATA SOURCE</text>
+          <text x="87" y="118" text-anchor="middle" fill="#141413" font-size="11" font-weight="600">IBM AML CSVs</text>
+          <text x="87" y="130" text-anchor="middle" fill="rgba(212,146,10,0.75)" font-size="7.5" letter-spacing="1">6.3 M transactions</text>
+
+          <!-- CSV → Python -->
+          <line x1="154" y1="109" x2="218" y2="109" stroke="rgba(20,20,19,0.3)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="186" y="104" text-anchor="middle" fill="rgba(20,20,19,0.3)" font-size="7" letter-spacing="1">CSV</text>
+
+          <!-- Python Ingestion -->
+          <rect x="220" y="80" width="148" height="58" fill="#f3f0e6" stroke="#7a5c3e" stroke-width="1.5" rx="1"/>
+          <text x="294" y="100" text-anchor="middle" fill="#7a5c3e" font-size="7.5" letter-spacing="3" opacity="0.8">INGESTION</text>
+          <text x="294" y="118" text-anchor="middle" fill="#141413" font-size="11" font-weight="600">Python Scripts</text>
+          <text x="294" y="130" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5" letter-spacing="1">validate · parse · load</text>
+
+          <!-- Python → PostgreSQL -->
+          <line x1="368" y1="109" x2="428" y2="106" stroke="rgba(20,20,19,0.3)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="398" y="103" text-anchor="middle" fill="rgba(20,20,19,0.3)" font-size="7" letter-spacing="1">rows</text>
+
+          <!-- PostgreSQL -->
+          <rect x="430" y="67" width="186" height="80" fill="#f3f0e6" stroke="rgba(20,20,19,0.35)" stroke-width="1.5" rx="1"/>
+          <text x="523" y="88" text-anchor="middle" fill="rgba(20,20,19,0.4)" font-size="7.5" letter-spacing="3">STORAGE</text>
+          <text x="523" y="106" text-anchor="middle" fill="#141413" font-size="12" font-weight="600">PostgreSQL</text>
+          <text x="523" y="121" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5">raw · staging · features · alerts · ml</text>
+          <text x="523" y="138" text-anchor="middle" fill="rgba(122,92,62,0.9)" font-size="7" letter-spacing="2" font-weight="600">✓ 78/78 TESTS PASS</text>
+
+          <!-- PostgreSQL → dbt -->
+          <line x1="523" y1="147" x2="523" y2="219" stroke="rgba(20,20,19,0.3)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="530" y="188" fill="rgba(20,20,19,0.25)" font-size="7" letter-spacing="1">tables</text>
+
+          <!-- dbt Pipeline -->
+          <rect x="430" y="221" width="186" height="62" fill="#f3f0e6" stroke="#d4920a" stroke-width="1.5" rx="1"/>
+          <text x="523" y="241" text-anchor="middle" fill="#d4920a" font-size="7.5" letter-spacing="3" opacity="0.85">TRANSFORM</text>
+          <text x="523" y="259" text-anchor="middle" fill="#141413" font-size="12" font-weight="600">dbt Pipeline</text>
+          <text x="523" y="274" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5">staging → features → alerts</text>
+
+          <!-- Split trunk -->
+          <line x1="523" y1="283" x2="523" y2="315" stroke="rgba(20,20,19,0.3)" stroke-width="1.5"/>
+          <circle cx="523" cy="315" r="3" fill="rgba(20,20,19,0.35)"/>
+          <line x1="265" y1="315" x2="650" y2="315" stroke="rgba(20,20,19,0.2)" stroke-width="1"/>
+          <line x1="265" y1="315" x2="265" y2="360" stroke="#7a5c3e" stroke-width="1.5" marker-end="url(#arr-teal)"/>
+          <line x1="650" y1="315" x2="650" y2="360" stroke="#b85a35" stroke-width="1.5" marker-end="url(#arr-rust)"/>
+          <text x="384" y="309" text-anchor="middle" fill="#7a5c3e" font-size="7" letter-spacing="1" opacity="0.65">graph features</text>
+          <text x="595" y="309" text-anchor="middle" fill="#b85a35" font-size="7" letter-spacing="1" opacity="0.65">ml features</text>
+
+          <!-- Neo4j GDS -->
+          <rect x="185" y="362" width="160" height="68" fill="#f3f0e6" stroke="#7a5c3e" stroke-width="1.5" rx="1"/>
+          <text x="265" y="382" text-anchor="middle" fill="#7a5c3e" font-size="7.5" letter-spacing="3">GRAPH ENGINE</text>
+          <text x="265" y="400" text-anchor="middle" fill="#141413" font-size="12" font-weight="600">Neo4j GDS</text>
+          <text x="265" y="415" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5">PageRank · Louvain</text>
+          <text x="265" y="424" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5">community detection</text>
+
+          <!-- XGBoost -->
+          <rect x="570" y="362" width="160" height="68" fill="#f3f0e6" stroke="#b85a35" stroke-width="1.5" rx="1"/>
+          <text x="650" y="382" text-anchor="middle" fill="#b85a35" font-size="7.5" letter-spacing="3">ML ENGINE</text>
+          <text x="650" y="400" text-anchor="middle" fill="#141413" font-size="12" font-weight="600">XGBoost</text>
+          <text x="650" y="415" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5">SHAP · risk scoring</text>
+          <text x="650" y="424" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5">5 models benchmarked</text>
+
+          <!-- Merge -->
+          <polyline points="265,430 265,463 523,463" fill="none" stroke="#7a5c3e" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+          <polyline points="650,430 650,463 523,463" fill="none" stroke="#b85a35" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+          <circle cx="523" cy="463" r="3" fill="rgba(20,20,19,0.35)"/>
+          <line x1="523" y1="463" x2="523" y2="491" stroke="rgba(122,92,62,0.8)" stroke-width="1.5" marker-end="url(#arr-green)"/>
+          <text x="531" y="480" fill="rgba(122,92,62,0.7)" font-size="7" letter-spacing="1">scores</text>
+
+          <!-- Analyst Surface -->
+          <rect x="433" y="493" width="180" height="58" fill="#f3f0e6" stroke="rgba(122,92,62,0.7)" stroke-width="1.5" rx="1"/>
+          <text x="523" y="513" text-anchor="middle" fill="rgba(122,92,62,0.9)" font-size="7.5" letter-spacing="3">OUTPUT LAYER</text>
+          <text x="523" y="531" text-anchor="middle" fill="#141413" font-size="12" font-weight="600">Analyst Surface</text>
+          <text x="523" y="543" text-anchor="middle" fill="rgba(20,20,19,0.45)" font-size="7.5">SQL · Alert Review · SAR Drafts</text>
+
+          <!-- Layer labels -->
+          <text x="840" y="112" text-anchor="end" fill="rgba(20,20,19,0.2)" font-size="7.5" letter-spacing="3" font-weight="600">01 / DATA</text>
+          <text x="840" y="255" text-anchor="end" fill="rgba(20,20,19,0.2)" font-size="7.5" letter-spacing="3" font-weight="600">02 / TRANSFORM</text>
+          <text x="840" y="400" text-anchor="end" fill="rgba(20,20,19,0.2)" font-size="7.5" letter-spacing="3" font-weight="600">03 / ANALYTICS</text>
+          <text x="840" y="527" text-anchor="end" fill="rgba(20,20,19,0.2)" font-size="7.5" letter-spacing="3" font-weight="600">04 / OUTPUT</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TYPOLOGIES ===== -->
+<section id="typologies">
+  <div class="container">
+    <div class="eyebrow reveal">Detection Logic</div>
+    <h2 class="section-heading reveal">Six Detection Typologies</h2>
+    <p class="section-sub reveal">Rule-based detection via dbt models, triggered by configurable thresholds aligned to AMLD5 and FATF guidance.</p>
+
+    <div class="typologies-grid">
+      <div class="typology-card sev-critical reveal">
+        <svg class="typology-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg>
+        <div class="typology-name">Smurfing</div>
+        <div class="typology-desc">Sub-threshold transaction structuring to avoid reporting obligations. Multiple small transfers to distinct beneficiaries within a 72-hour rolling window.</div>
+        <div class="typology-footer"><span class="sev-badge critical">Critical</span><span class="typology-param">5+ txns &lt;€9,999 / 72h</span></div>
+      </div>
+      <div class="typology-card sev-high reveal reveal-d1">
+        <svg class="typology-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="4" r="2"/><circle cx="4" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="20" cy="20" r="2"/><path d="M12 6l-6 12M12 6v12M12 6l6 12" stroke-linecap="round"/></svg>
+        <div class="typology-name">Fan-Out</div>
+        <div class="typology-desc">Single account distributing funds to an anomalously high number of distinct beneficiaries in 24 hours — indicative of layering after initial aggregation.</div>
+        <div class="typology-footer"><span class="sev-badge high">High</span><span class="typology-param">10+ beneficiaries / 24h</span></div>
+      </div>
+      <div class="typology-card sev-high reveal reveal-d2">
+        <svg class="typology-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="20" r="2"/><circle cx="4" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="20" cy="4" r="2"/><path d="M4 6l8 12M12 6v12M20 6l-8 12" stroke-linecap="round"/></svg>
+        <div class="typology-name">Fan-In</div>
+        <div class="typology-desc">Account receiving funds from many distinct senders simultaneously — a classic aggregation hub, often followed by a single consolidating outbound transfer.</div>
+        <div class="typology-footer"><span class="sev-badge high">High</span><span class="typology-param">10+ senders / 24h</span></div>
+      </div>
+      <div class="typology-card sev-critical reveal">
+        <svg class="typology-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-9-9" stroke-linecap="round"/><path d="M16 8l5-5M21 8V3h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="typology-name">Circular Flows</div>
+        <div class="typology-desc">Funds cycling back to the originating account through a chain of intermediaries — a definitive signal of wash-trading or deliberate source obfuscation.</div>
+        <div class="typology-footer"><span class="sev-badge critical">Critical</span><span class="typology-param">A→B→C→A within 7 days</span></div>
+      </div>
+      <div class="typology-card sev-high reveal reveal-d1">
+        <svg class="typology-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="16" width="20" height="4" rx="1"/></svg>
+        <div class="typology-name">Layering</div>
+        <div class="typology-desc">Multi-hop transfer chain where each hop deducts a small commission (85–99% pass-through), obscuring the origin while preserving value across intermediaries.</div>
+        <div class="typology-footer"><span class="sev-badge high">High</span><span class="typology-param">3+ hops · 85–99% each</span></div>
+      </div>
+      <div class="typology-card sev-high reveal reveal-d2">
+        <svg class="typology-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10M12 2c2.5 3 4 6.5 4 10s-1.5 7-4 10" stroke-linecap="round"/></svg>
+        <div class="typology-name">High-Risk Geography</div>
+        <div class="typology-desc">Transactions involving FATF-monitored jurisdictions: Iran, DPRK, Myanmar, Syria, Yemen, Haiti, South Sudan, Nigeria, Venezuela, and 6 further watchlist countries.</div>
+        <div class="typology-footer"><span class="sev-badge high">High</span><span class="typology-param">15 FATF jurisdictions</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CASE STUDIES ===== -->
+<section class="case-studies" id="cases">
+  <div class="container">
+    <div class="eyebrow reveal">Investigation Files</div>
+    <h2 class="section-heading reveal">Case Studies</h2>
+    <p class="section-sub reveal">Three real detection outputs from the IBM AML dataset. Click any file to open the full investigation.</p>
+
+    <div class="cases-grid">
+      <!-- CASE 1 -->
+      <div class="case-card reveal" data-case="1">
+        <div class="case-header">
+          <div class="case-meta-row"><span class="case-id">Case #GG-2024-0847</span><span class="case-stamp critical">Critical</span></div>
+          <div class="case-rules"><span class="case-rule-tag">Smurfing</span></div>
+          <div class="case-title">Structuring by Fragmentation</div>
+          <div class="case-acct">ACC-00847291</div>
+          <div class="case-toggle">+</div>
+        </div>
+        <div class="case-body">
+          <div class="case-section">
+            <div class="case-section-title">Transaction Analysis</div>
+            <div class="case-row"><span class="case-key">Outbound transactions</span><span class="case-val c-crim">17 in 68 hours</span></div>
+            <div class="case-row"><span class="case-key">Threshold ceiling</span><span class="case-val c-rust">all below €9,999</span></div>
+            <div class="case-row"><span class="case-key">Total volume</span><span class="case-val">€83,150</span></div>
+            <div class="case-row"><span class="case-key">Night ratio</span><span class="case-val c-crim">0.71 (avg: 0.12)</span></div>
+          </div>
+          <div class="case-section">
+            <div class="case-section-title">ML Risk Score</div>
+            <div class="case-row"><span class="case-key">XGBoost score</span><span class="case-val c-crim">91.4 / 100</span></div>
+            <div class="score-bar"><div class="score-fill crit" style="width:91.4%"></div></div>
+            <div class="case-row" style="margin-top:10px"><span class="case-key">Top SHAP features</span><span class="case-val c-teal">velocity_7d · n_unique_counterparts</span></div>
+          </div>
+          <div class="case-section">
+            <div class="case-section-title">Graph Metrics</div>
+            <div class="case-row"><span class="case-key">PageRank</span><span class="case-val">0.0041</span></div>
+            <div class="case-row"><span class="case-key">Louvain community</span><span class="case-val c-teal">19 accounts</span></div>
+          </div>
+          <div class="case-section">
+            <div class="case-section-title">Recommendation</div>
+            <ul class="rec-list">
+              <li>Enhanced Due Diligence (EDD)</li>
+              <li>Draft Suspicious Activity Report (SAR)</li>
+              <li>Freeze 14 beneficiary accounts</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- CASE 2 -->
+      <div class="case-card reveal reveal-d1" data-case="2">
+        <div class="case-header">
+          <div class="case-meta-row"><span class="case-id">Case #GG-2024-0391</span><span class="case-stamp high">High</span></div>
+          <div class="case-rules"><span class="case-rule-tag">Fan-In</span><span class="case-rule-tag">High-Risk Geo</span></div>
+          <div class="case-title">High-Risk Geography Aggregation Hub</div>
+          <div class="case-acct">ACC-00391074</div>
+          <div class="case-toggle">+</div>
+        </div>
+        <div class="case-body">
+          <div class="case-section">
+            <div class="case-section-title">Transaction Analysis</div>
+            <div class="case-row"><span class="case-key">Inbound transfers</span><span class="case-val c-crim">13 in 13 hours</span></div>
+            <div class="case-row"><span class="case-key">Distinct senders</span><span class="case-val c-rust">11 (NG/VE accounts)</span></div>
+            <div class="case-row"><span class="case-key">Total inbound</span><span class="case-val">€134,600</span></div>
+            <div class="case-row"><span class="case-key">Single outbound</span><span class="case-val c-crim">€131,200 within 6h</span></div>
+            <div class="case-row"><span class="case-key">Retention rate</span><span class="case-val c-rust">2.5%</span></div>
+          </div>
+          <div class="case-section">
+            <div class="case-section-title">ML Risk Score</div>
+            <div class="case-row"><span class="case-key">XGBoost score</span><span class="case-val c-rust">88.7 / 100</span></div>
+            <div class="score-bar"><div class="score-fill high" style="width:88.7%"></div></div>
+            <div class="case-row" style="margin-top:10px"><span class="case-key">Top SHAP features</span><span class="case-val c-teal">n_countries_transacted · ratio_night_txns</span></div>
+          </div>
+          <div class="case-section">
+            <div class="case-section-title">Graph Metrics</div>
+            <div class="case-row"><span class="case-key">Betweenness centrality</span><span class="case-val c-crim">top 0.3%</span></div>
+            <div class="case-row"><span class="case-key">Louvain community</span><span class="case-val c-teal">31 nodes</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- CASE 3 -->
+      <div class="case-card reveal reveal-d2" data-case="3">
+        <div class="case-header">
+          <div class="case-meta-row"><span class="case-id">Case #GG-2024-0562</span><span class="case-stamp critical">Critical</span></div>
+          <div class="case-rules"><span class="case-rule-tag">Circular</span><span class="case-rule-tag">Layering</span></div>
+          <div class="case-title">Three-Account Circular Layering Ring</div>
+          <div class="case-acct">ACC-00562883</div>
+          <div class="case-toggle">+</div>
+        </div>
+        <div class="case-body">
+          <div class="case-section">
+            <div class="case-section-title">Transaction Chain</div>
+            <div class="case-row"><span class="case-key">Ring structure</span><span class="case-val c-teal">A → B → C → A</span></div>
+            <div class="case-row"><span class="case-key">Cycle duration</span><span class="case-val c-rust">5 days</span></div>
+            <div class="case-row"><span class="case-key">Pass-through rate</span><span class="case-val c-crim">97% (3% commission)</span></div>
+            <div class="case-row"><span class="case-key">Account inception</span><span class="case-val c-rust">all within 45 days</span></div>
+          </div>
+          <div class="case-section">
+            <div class="case-section-title">ML Risk Scores — All 3 Accounts</div>
+            <div class="case-row"><span class="case-key">ACC-00562883</span><span class="case-val c-crim">94.1 — Critical</span></div>
+            <div class="score-bar"><div class="score-fill crit" style="width:94.1%"></div></div>
+            <div class="case-row" style="margin-top:8px"><span class="case-key">ACC-00719046</span><span class="case-val c-rust">87.3 — High</span></div>
+            <div class="score-bar"><div class="score-fill high" style="width:87.3%"></div></div>
+            <div class="case-row" style="margin-top:8px"><span class="case-key">ACC-00204517</span><span class="case-val c-rust">82.6 — High</span></div>
+            <div class="score-bar"><div class="score-fill high" style="width:82.6%"></div></div>
+          </div>
+          <div class="case-section">
+            <div class="case-section-title">Graph Metrics</div>
+            <div class="case-row"><span class="case-key">Louvain community</span><span class="case-val c-teal">all 3 — same cluster</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TECH STACK ===== -->
+<section id="stack">
+  <div class="container">
+    <div class="eyebrow reveal">Technology</div>
+    <h2 class="section-heading reveal">Stack Breakdown</h2>
+    <p class="section-sub reveal">Each component chosen for production-grade AML monitoring at financial institution scale.</p>
+    <div class="tech-grid">
+      <div class="tech-col reveal">
+        <div class="tech-col-icon" style="color:var(--gold)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v2H4V4zm0 6h16v2H4v-2zm0 6h8v2H4v-2zm10 0l6 4-6 4V16z"/></svg></div>
+        <div class="tech-col-role">Orchestration</div>
+        <div class="tech-col-name">Airflow</div>
+        <ul class="tech-items">
+          <li class="tech-item">DAG-based scheduling for all ETL and ML jobs</li>
+          <li class="tech-item">Auto-retry on ingestion failure with alerting</li>
+          <li class="tech-item">Daily incremental loads + full-refresh on demand</li>
+          <li class="tech-item">Docker Compose with Celery executor</li>
+        </ul>
+      </div>
+      <div class="tech-col reveal reveal-d1">
+        <div class="tech-col-icon" style="color:var(--ink-dim)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2zm8 15.5c0 1.38-3.58 2.5-8 2.5s-8-1.12-8-2.5V15c1.74 1.01 4.73 1.5 8 1.5s6.26-.49 8-1.5v2.5zm0-5c0 1.38-3.58 2.5-8 2.5s-8-1.12-8-2.5V10c1.74 1.01 4.73 1.5 8 1.5s6.26-.49 8-1.5v2.5zm-8-2.5c-4.42 0-8-1.12-8-2.5S7.58 5 12 5s8 1.12 8 2.5S16.42 10 12 10z"/></svg></div>
+        <div class="tech-col-role">Storage + Transform</div>
+        <div class="tech-col-name">PostgreSQL + dbt</div>
+        <ul class="tech-items">
+          <li class="tech-item">5-schema warehouse: raw → staging → features → alerts → ml</li>
+          <li class="tech-item">78 dbt tests enforcing integrity and data quality</li>
+          <li class="tech-item">Incremental models for efficient daily refreshes</li>
+          <li class="tech-item">Alert staging with severity metadata and evidence</li>
+        </ul>
+      </div>
+      <div class="tech-col reveal reveal-d2">
+        <div class="tech-col-icon" style="color:var(--teal)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/><line x1="7" y1="19" x2="17" y2="19"/></svg></div>
+        <div class="tech-col-role">Graph Analytics</div>
+        <div class="tech-col-name">Neo4j GDS</div>
+        <ul class="tech-items">
+          <li class="tech-item">PageRank to surface high-influence transaction nodes</li>
+          <li class="tech-item">Louvain community detection for ring discovery</li>
+          <li class="tech-item">Betweenness centrality for aggregation-hub flagging</li>
+          <li class="tech-item">In-memory graph projection for GDS algorithm runs</li>
+        </ul>
+      </div>
+      <div class="tech-col reveal reveal-d3">
+        <div class="tech-col-icon" style="color:var(--rust)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+        <div class="tech-col-role">ML Scoring</div>
+        <div class="tech-col-name">XGBoost + SHAP</div>
+        <ul class="tech-items">
+          <li class="tech-item">XGBoost best-performing across 5 benchmarked models</li>
+          <li class="tech-item">SHAP values for per-alert feature attribution</li>
+          <li class="tech-item">Graph features (PageRank, community size) as ML inputs</li>
+          <li class="tech-item">Risk score 0–100 written to alerts schema for triage</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATS ===== -->
+<div class="stats" id="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item"><span class="stat-num" data-target="6">0</span><span class="stat-label">Detection<br>Typologies</span></div>
+      <div class="stat-item"><span class="stat-num" data-target="78">0</span><span class="stat-label">dbt Tests<br>Passing</span><div class="stat-sub">78/78</div></div>
+      <div class="stat-item"><span class="stat-num" data-target="3">0</span><span class="stat-label">Case Studies<br>with SAR</span></div>
+      <div class="stat-item"><span class="stat-num" data-target="15">0</span><span class="stat-label">High-Risk<br>Jurisdictions</span><div class="stat-sub">FATF Monitored</div></div>
+      <div class="stat-item"><span class="stat-num" data-target="5">0</span><span class="stat-label">ML Models<br>Benchmarked</span></div>
+      <div class="stat-item">
+        <span class="stat-num" style="font-size:36px;padding-top:10px">AMLD5</span>
+        <span class="stat-label">Compliant<br>Design</span>
+        <div class="stat-sub">+ FATF</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-eyebrow">Open Source</div>
+        <h2 class="footer-title">Explore the <em>Source</em></h2>
+        <p class="footer-desc">Full pipeline code, dbt models, Airflow DAGs, Neo4j queries, and XGBoost notebooks available on GitHub.</p>
+        <div class="footer-btns">
+          <a href="https://github.com/diegosnchz/AMLGuardian" target="_blank" rel="noopener" class="btn btn-parchment">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 2C6.476 2 2.001 6.475 2.001 12c0 4.425 2.863 8.163 6.838 9.488.5.088.688-.213.688-.475 0-.238-.013-1.025-.013-1.862C7 19.612 6.35 18.538 6.15 17.975c-.113-.288-.6-1.175-1.025-1.413-.35-.187-.85-.65.012-.662.787-.013 1.35.725 1.538 1.025.9 1.512 2.337 1.087 2.9.825.087-.65.35-1.088.637-1.338-2.225-.25-4.525-1.112-4.525-4.937 0-1.088.387-1.988 1.025-2.688-.1-.25-.45-1.275.1-2.662 0 0 .837-.263 2.75 1.025.8-.225 1.65-.338 2.5-.338s1.7.113 2.5.338c1.913-1.3 2.75-1.025 2.75-1.025.55 1.387.2 2.412.1 2.662.637.7 1.025 1.587 1.025 2.688 0 3.837-2.313 4.687-4.513 4.937.363.313.675.913.675 1.85 0 1.337-.012 2.412-.012 2.75 0 .262.187.575.687.475C19.138 20.163 22 16.412 22 12c0-5.525-4.475-10-9.999-10z"/></svg>
+            View on GitHub
+          </a>
+          <a href="https://diegosanchez.vercel.app" class="btn btn-ghost">← Portfolio</a>
+        </div>
+      </div>
+      <div class="footer-right">
+        <div class="footer-meta-title">Project Details</div>
+        <ul class="footer-links">
+          <li><a href="#architecture">System Architecture <span>↗</span></a></li>
+          <li><a href="#typologies">6 Detection Typologies <span>↗</span></a></li>
+          <li><a href="#cases">Case Studies & SAR Narratives <span>↗</span></a></li>
+          <li><a href="#stack">Full Tech Stack <span>↗</span></a></li>
+          <li><a href="https://github.com/diegosnchz/AMLGuardian" target="_blank">Source Code on GitHub <span>↗</span></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2025 Diego Sánchez Peinado — GraphGuard AML Platform</span>
+      <a href="https://diegosanchez.vercel.app" class="footer-back">diegosanchez.vercel.app</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Accordion
+  document.querySelectorAll('.case-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const body   = card.querySelector('.case-body');
+      const toggle = card.querySelector('.case-toggle');
+      const isOpen = card.classList.contains('open');
+      document.querySelectorAll('.case-card').forEach(c => {
+        c.classList.remove('open');
+        c.querySelector('.case-body').classList.remove('open');
+        c.querySelector('.case-toggle').textContent = '+';
+      });
+      if (!isOpen) { card.classList.add('open'); body.classList.add('open'); toggle.textContent = '−'; }
+    });
+  });
+
+  // Scroll reveal
+  const ro = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); ro.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+  // Stats counter
+  const statsEl = document.getElementById('stats');
+  if (statsEl) {
+    const so = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        document.querySelectorAll('.stat-item').forEach(i => i.classList.add('active'));
+        document.querySelectorAll('[data-target]').forEach(el => {
+          const target = parseInt(el.dataset.target, 10);
+          const start  = performance.now();
+          const tick   = now => {
+            const p = Math.min((now - start) / 1600, 1);
+            el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target);
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+        so.unobserve(statsEl);
+      }
+    }, { threshold: 0.3 });
+    so.observe(statsEl);
+  }
+</script>
+</body>
+</html>

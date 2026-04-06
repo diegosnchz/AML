@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "GraphGuard Docs",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "docs", "-p", "3000", "--no-clipboard"],
+      "port": 3000
+    },
+    {
       "name": "Full Stack",
       "runtimeExecutable": "docker",
       "runtimeArgs": ["compose", "up", "-d"],
