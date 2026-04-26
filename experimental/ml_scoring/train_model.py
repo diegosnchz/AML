@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -14,6 +15,8 @@ from sklearn.metrics import average_precision_score, confusion_matrix, f1_score
 from sklearn.model_selection import train_test_split
 from sqlalchemy import text
 from xgboost import XGBClassifier
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "orchestration" / "legacy_postgres_ingestion"))
 
 from common import configure_logging, env, ensure_directory, get_engine
 
@@ -242,4 +245,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

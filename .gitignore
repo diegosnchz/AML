@@ -10,13 +10,22 @@ logs/
 
 data/*
 !data/.gitkeep
+!data/raw/
+!data/raw/*.csv
+!data/processed/
+data/processed/*
+!data/processed/.gitkeep
 
 outputs/*
 !outputs/.gitkeep
+!outputs/alerts_sample.csv
 
 dbt/target/
 dbt/logs/
 dbt/packages/
+experimental/orchestration/dbt/target/
+experimental/orchestration/dbt/logs/
+experimental/orchestration/dbt/packages/
 
 .env
 .env.*

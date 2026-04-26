@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import sys
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pandas as pd
 from neo4j import GraphDatabase
 from sqlalchemy import text
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "orchestration" / "legacy_postgres_ingestion"))
 
 from common import configure_logging, env, get_engine
 
