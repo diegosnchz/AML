@@ -125,7 +125,12 @@ const INTERVIEW_SCRIPT = [
     say: "No es score fijo: puedo simular escenarios y justificar por que sube o baja con contribuciones.",
   },
   {
-    title: "6) Cierre investigable",
+    title: "6) Capa de credito",
+    body: "Muestra la tarjeta Credit Risk para explicar NPL +90 DPD, PD/EAD/LGD, Expected Loss y stress simple.",
+    say: "La capa de credito es educativa y separada: no cambia AML, solo demuestra reporting de riesgo de credito.",
+  },
+  {
+    title: "7) Cierre investigable",
     body: "Ejecuta SQL Evidence y Data Provenance para dejar claro de donde sale todo.",
     say: "La gracia es que el analista investiga en SQL/BI sin pelear infraestructura ni cajas negras.",
   },
@@ -139,6 +144,34 @@ const ARCHITECTURE_BLOCKS = [
   "Neo4j + GDS",
   "ML scoring + SHAP-like explainability",
   "SQL/BI investigation output",
+];
+
+const CREDIT_RISK_CONCEPTS = [
+  {
+    label: "NPL +90 DPD",
+    value: "4 loans",
+    detail: "Prestamos con mas de 90 dias de retraso marcados como Non-Performing Loans.",
+  },
+  {
+    label: "PD / EAD / LGD",
+    value: "EL formula",
+    detail: "PD estima default, EAD exposicion al default y LGD perdida no recuperada.",
+  },
+  {
+    label: "Expected Loss",
+    value: "PD x EAD x LGD",
+    detail: "Perdida esperada calculada por prestamo y agregada por tipo de producto.",
+  },
+  {
+    label: "Recovery Rate",
+    value: "Recovered / EAD",
+    detail: "Lectura simple de recuperacion observada sobre exposicion.",
+  },
+  {
+    label: "Stress multiplier",
+    value: "1.0x - 2.0x",
+    detail: "Escenario educativo que multiplica PD y recalcula stressed expected loss.",
+  },
 ];
 
 function Badge({ severity }: { severity: Severity }) {
@@ -559,8 +592,8 @@ export default function DemoApp() {
               <p className="max-w-3xl text-sm leading-relaxed text-[#4d4940] md:text-base">
                 Plataforma demo ultra tecnica para explicar de punta a punta un pipeline AML real:
                 CSV -&gt; ingesta Python -&gt; PostgreSQL/dbt -&gt; Neo4j + GDS -&gt; scoring ML explicable -&gt;
-                investigacion SQL. Cada interaccion recalcula logica y evidencia, sin pantallas
-                estaticas.
+                investigacion SQL. Ahora incluye una capa educativa de Credit Risk Reporting para entrevista,
+                sin sustituir la demo AML existente.
               </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricBox icon={Database} label="Cuentas" value={String(architectureStats.accounts)} />
@@ -582,6 +615,13 @@ export default function DemoApp() {
                 >
                   <GitBranch className="h-4 w-4" />
                   Data Provenance
+                </a>
+                <a
+                  href="#credit-risk-layer"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#d5cebf]/75 px-5 py-2.5 text-sm font-semibold text-[#2a2823] transition hover:border-[#bfb7a6]/90 hover:bg-[#ece6da]/80"
+                >
+                  <Activity className="h-4 w-4" />
+                  Credit Risk Layer
                 </a>
               </div>
             </div>
@@ -1049,8 +1089,46 @@ export default function DemoApp() {
         </SectionShell>
 
         <SectionShell
+          id="credit-risk-layer"
+          kicker="05. Credit Risk Interview Layer"
+          title="Capa educativa de riesgo de credito"
+          subtitle="Extension pequena y estatica sobre la demo AML: sirve para explicar NPL, buckets 30/60/90, PD, EAD, LGD, Expected Loss, Recovery Rate y stress simple sin convertirlo en un sistema regulatorio."
+        >
+          <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-2xl border border-[#d5cebf]/70 bg-[#f7f4ee]/90 p-4">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-[#9b4a2a]" />
+                <p className="text-xs uppercase tracking-[0.16em] text-[#6f6a5f]">Static interview fixture</p>
+              </div>
+              <h3 className="mt-3 text-xl font-semibold text-[#1f1d18]">Credit Risk Reporting</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[#4d4940]">
+                Esta tarjeta no sustituye AML ni anade un motor nuevo. Resume la capa Python/Streamlit
+                creada sobre <span className="font-mono">data/raw/loans.csv</span> y{" "}
+                <span className="font-mono">src/credit_risk_metrics.py</span>.
+              </p>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <InfoKV label="NPL rule" value="days_past_due > 90" />
+                <InfoKV label="Early warning" value="30 <= DPD <= 90" />
+                <InfoKV label="Base EL" value="PD x EAD x LGD" />
+                <InfoKV label="Stress" value="PD x multiplier, capped at 1" />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {CREDIT_RISK_CONCEPTS.map((concept) => (
+                <div key={concept.label} className="rounded-2xl border border-[#d5cebf]/70 bg-[#fbf9f3]/85 p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-[#6f6a5f]">{concept.label}</p>
+                  <p className="mt-2 text-lg font-semibold text-[#1f1d18]">{concept.value}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-[#4d4940]">{concept.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </SectionShell>
+
+        <SectionShell
           id="sql-evidence"
-          kicker="05. SQL / Evidence View"
+          kicker="06. SQL / Evidence View"
           title="Consola investigable sobre data local"
           subtitle="No depende de BD real para la entrevista: ejecuta snippets SQL repo-faithful sobre dataset demo."
         >
@@ -1117,7 +1195,7 @@ export default function DemoApp() {
 
         <SectionShell
           id="interview-mode"
-          kicker="06. Interview Mode"
+          kicker="07. Interview Mode"
           title="Guion guiado de 3-5 minutos"
           subtitle="Modo narrativo para conducir la entrevista con checkpoints tecnicos y notas de discurso."
         >
@@ -1186,7 +1264,7 @@ export default function DemoApp() {
 
         <SectionShell
           id="data-provenance"
-          kicker="07. Data Provenance"
+          kicker="08. Data Provenance"
           title="Where the data came from"
           subtitle="Linea de procedencia para dejar claro que no son dashboards desconectados."
         >

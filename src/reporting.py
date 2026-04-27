@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.credit_risk_metrics import REQUIRED_LOAN_COLUMNS, build_credit_risk_metrics
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
@@ -99,6 +101,125 @@ def data_quality_summary(transactions_raw: pd.DataFrame) -> pd.DataFrame:
         },
     ]
     return pd.DataFrame(rows)
+
+
+def load_credit_risk_table(
+    raw_path: Path = RAW_DIR / "loans.csv",
+    stress_multiplier: float = 1.5,
+) -> pd.DataFrame:
+    loans = pd.read_csv(raw_path)
+    return build_credit_risk_metrics(loans, stress_multiplier=stress_multiplier)
+
+
+def credit_data_quality_summary(loans_raw: pd.DataFrame) -> pd.DataFrame:
+    missing_columns = [column for column in REQUIRED_LOAN_COLUMNS if column not in loans_raw.columns]
+    if missing_columns:
+        return pd.DataFrame(
+            [
+                {
+                    "check": "required loan columns present",
+                    "issues": len(missing_columns),
+                    "detail": ", ".join(missing_columns),
+                }
+            ]
+        )
+
+    loans = loans_raw.copy()
+    key_fields = ["loan_id", "customer_id", "product_type", "origination_date"]
+    missing_key_fields = loans[key_fields].isna().any(axis=1) | (
+        loans[key_fields].astype(str).apply(lambda column: column.str.strip()).eq("").any(axis=1)
+    )
+    duplicated_loan_ids = loans["loan_id"].duplicated(keep=False)
+    invalid_dates = pd.to_datetime(loans["origination_date"], errors="coerce").isna()
+
+    outstanding_balance = pd.to_numeric(loans["outstanding_balance"], errors="coerce")
+    days_past_due = pd.to_numeric(loans["days_past_due"], errors="coerce")
+    pd_values = pd.to_numeric(loans["pd"], errors="coerce")
+    ead = pd.to_numeric(loans["ead"], errors="coerce")
+    lgd = pd.to_numeric(loans["lgd"], errors="coerce")
+    recovered_amount = pd.to_numeric(loans["recovered_amount"], errors="coerce")
+
+    rows = [
+        {
+            "check": "missing key loan fields",
+            "issues": int(missing_key_fields.sum()),
+            "detail": "loan_id, customer_id, product_type and origination_date should be present",
+        },
+        {
+            "check": "duplicated loan IDs",
+            "issues": int(duplicated_loan_ids.sum()),
+            "detail": "duplicate loans can distort NPL rate and exposure totals",
+        },
+        {
+            "check": "invalid origination dates",
+            "issues": int(invalid_dates.sum()),
+            "detail": "origination_date must be parseable for portfolio ageing context",
+        },
+        {
+            "check": "negative or invalid exposure values",
+            "issues": int(((outstanding_balance < 0) | (ead <= 0) | outstanding_balance.isna() | ead.isna()).sum()),
+            "detail": "outstanding_balance and ead are expected to be positive or zero",
+        },
+        {
+            "check": "invalid DPD or risk parameters",
+            "issues": int(
+                (
+                    (days_past_due < 0)
+                    | days_past_due.isna()
+                    | ~pd_values.between(0, 1)
+                    | pd_values.isna()
+                    | ~lgd.between(0, 1)
+                    | lgd.isna()
+                ).sum()
+            ),
+            "detail": "days_past_due must be non-negative; pd and lgd must be between 0 and 1",
+        },
+        {
+            "check": "recovery amount exceeds EAD",
+            "issues": int((recovered_amount > ead).sum()),
+            "detail": "recovered_amount should not exceed exposure at default in this demo",
+        },
+    ]
+    return pd.DataFrame(rows)
+
+
+def calculate_credit_risk_metrics(
+    credit_table: pd.DataFrame,
+    dq_summary: pd.DataFrame | None = None,
+) -> dict[str, object]:
+    total_loans = int(len(credit_table))
+    total_ead = float(credit_table["ead"].sum())
+    npl_count = int(credit_table["npl_flag"].sum())
+    expected_loss = float(credit_table["expected_loss"].sum())
+    stressed_expected_loss = float(credit_table["stressed_expected_loss"].sum())
+    average_recovery_rate = float(credit_table["recovery_rate"].mean()) if total_loans else 0
+
+    data_quality_issues = int(dq_summary["issues"].sum()) if dq_summary is not None else 0
+
+    return {
+        "total_loans": total_loans,
+        "total_ead": round(total_ead, 2),
+        "npl_count": npl_count,
+        "npl_rate": npl_count / total_loans if total_loans else 0,
+        "early_warning_count": int(credit_table["early_warning_flag"].sum()),
+        "expected_loss": round(expected_loss, 2),
+        "stressed_expected_loss": round(stressed_expected_loss, 2),
+        "average_pd": float(credit_table["pd"].mean()) if total_loans else 0,
+        "average_lgd": float(credit_table["lgd"].mean()) if total_loans else 0,
+        "average_recovery_rate": average_recovery_rate,
+        "data_quality_issues_detected_credit": data_quality_issues,
+        "data_quality_summary": dq_summary if dq_summary is not None else pd.DataFrame(),
+        "expected_loss_by_product_type": (
+            credit_table.groupby("product_type", as_index=False)["expected_loss"]
+            .sum()
+            .sort_values("expected_loss", ascending=False)
+        ),
+        "loans_by_delinquency_bucket": (
+            credit_table.groupby("delinquency_bucket", as_index=False)
+            .size()
+            .rename(columns={"size": "loans"})
+        ),
+    }
 
 
 def calculate_reporting_metrics(

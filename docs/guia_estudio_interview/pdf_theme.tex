@@ -1,0 +1,65 @@
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\usepackage{fontspec}
+
+\definecolor{AMLInk}{HTML}{1F1D18}
+\definecolor{AMLClay}{HTML}{9B4A2A}
+\definecolor{AMLSoft}{HTML}{F7F4EE}
+\definecolor{AMLBorder}{HTML}{D5CEBF}
+\definecolor{AMLMuted}{HTML}{4D4940}
+
+\setmainfont{Segoe UI}
+\setsansfont{Segoe UI}
+\setmonofont{Consolas}
+
+\pagecolor{white}
+\color{AMLInk}
+\setlength{\parskip}{0.6em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{leftmargin=1.4em,itemsep=0.2em,topsep=0.25em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.2em,topsep=0.25em}
+
+\titleformat{\section}
+  {\Large\bfseries\color{AMLClay}}
+  {\thesection}{0.7em}{}
+  [\vspace{0.2em}{\titlerule[0.6pt]}]
+
+\titleformat{\subsection}
+  {\large\bfseries\color{AMLInk}}
+  {\thesubsection}{0.7em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{AMLMuted}}
+  {\thesubsubsection}{0.7em}{}
+
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\textcolor{AMLMuted}{\thepage}}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{AMLMuted}{AML Interview Study Guide}}
+\fancyhead[R]{\textcolor{AMLClay}{\leftmark}}
+\fancyfoot[C]{\textcolor{AMLMuted}{\thepage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{AMLBorder}\leaders\hrule height \headrulewidth\hfill}}
+
+\tcbset{
+  colback=AMLSoft,
+  colframe=AMLBorder,
+  arc=2mm,
+  boxrule=0.5pt,
+  left=8pt,
+  right=8pt,
+  top=7pt,
+  bottom=7pt
+}
+
+\let\oldquote\quote
+\let\endoldquote\endquote
+\renewenvironment{quote}{\begin{tcolorbox}\oldquote}{\endoldquote\end{tcolorbox}}

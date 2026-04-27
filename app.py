@@ -11,7 +11,10 @@ from src.reporting import (
     add_alert_business_fields,
     build_alert_review_table,
     calculate_reporting_metrics,
+    calculate_credit_risk_metrics,
+    credit_data_quality_summary,
     data_quality_summary,
+    load_credit_risk_table,
     load_demo_tables,
 )
 
@@ -537,6 +540,56 @@ def top_accounts_chart(alerts: pd.DataFrame) -> alt.Chart | alt.LayerChart:
     return chart_base(chart)
 
 
+def credit_bucket_chart(credit_table: pd.DataFrame) -> alt.Chart | alt.LayerChart:
+    bucket_order = ["CURRENT", "1-30 DPD", "31-60 DPD", "61-90 DPD", "90+ DPD"]
+    counts = (
+        credit_table.groupby("delinquency_bucket", as_index=False)
+        .size()
+        .rename(columns={"size": "loans"})
+    )
+    data = pd.DataFrame({"delinquency_bucket": bucket_order}).merge(counts, how="left").fillna({"loans": 0})
+    if data["loans"].sum() == 0:
+        return empty_chart("No loan data available")
+    chart = (
+        alt.Chart(data)
+        .mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3, color=CLAY)
+        .encode(
+            x=alt.X(
+                "delinquency_bucket:N",
+                sort=bucket_order,
+                title=None,
+                axis=alt.Axis(labelAngle=0),
+            ),
+            y=alt.Y("loans:Q", title="Loans"),
+            tooltip=["delinquency_bucket:N", "loans:Q"],
+        )
+        .properties(height=260)
+    )
+    labels = chart.mark_text(dy=-8, color=INK, fontSize=12, fontWeight="bold").encode(text="loans:Q")
+    return chart_base(chart + labels)
+
+
+def expected_loss_by_product_chart(credit_table: pd.DataFrame) -> alt.Chart | alt.LayerChart:
+    data = (
+        credit_table.groupby("product_type", as_index=False)["expected_loss"]
+        .sum()
+        .sort_values("expected_loss", ascending=False)
+    )
+    if data.empty:
+        return empty_chart("No expected loss data available")
+    chart = (
+        alt.Chart(data)
+        .mark_bar(cornerRadiusTopRight=3, cornerRadiusBottomRight=3, color=INK)
+        .encode(
+            y=alt.Y("product_type:N", sort="-x", title=None, axis=alt.Axis(labelLimit=160)),
+            x=alt.X("expected_loss:Q", title="Expected Loss"),
+            tooltip=["product_type:N", alt.Tooltip("expected_loss:Q", format=",.2f")],
+        )
+        .properties(height=260)
+    )
+    return chart_base(chart)
+
+
 def quality_cards(dq_summary: pd.DataFrame) -> None:
     cards = []
     for _, row in dq_summary.iterrows():
@@ -693,6 +746,7 @@ except FileNotFoundError:
         "python src/clean_data.py\n"
         "python src/generate_features.py\n"
         "python src/detect_alerts.py\n"
+        "python src/credit_risk_metrics.py\n"
         "streamlit run app.py",
         language="bash",
     )
@@ -899,7 +953,106 @@ section(
 quality_cards(metrics["data_quality_summary"])
 st.dataframe(metrics["data_quality_summary"], use_container_width=True, hide_index=True)
 
-section("06 / Interview Mode", "How to explain this demo")
+section(
+    "06 / Credit Risk",
+    "Credit Risk Reporting",
+    "Mini capa educativa de riesgo de credito para entrevista. Extiende el proyecto AML con una cartera sintetica y conceptos basicos: morosidad 30/60/90, NPL >90 DPD, PD, EAD, LGD, Expected Loss, recovery rate, stress simple y calidad de datos.",
+)
+
+stress_multiplier = st.slider(
+    "Stress multiplier",
+    min_value=1.0,
+    max_value=2.0,
+    value=1.5,
+    step=0.1,
+    help="Multiplica la PD para simular un deterioro simple de cartera. La PD estresada queda limitada a 1.",
+)
+credit_table = load_credit_risk_table(stress_multiplier=stress_multiplier)
+credit_raw = pd.read_csv(RAW_DIR / "loans.csv")
+credit_dq_summary = credit_data_quality_summary(credit_raw)
+credit_metrics = calculate_credit_risk_metrics(credit_table, credit_dq_summary)
+
+credit_col1, credit_col2, credit_col3, credit_col4 = st.columns(4)
+credit_col1.metric("Total loans", f"{credit_metrics['total_loans']:,}")
+credit_col2.metric("NPL rate", pct(credit_metrics["npl_rate"]))
+credit_col3.metric("Early warning loans", f"{credit_metrics['early_warning_count']:,}")
+credit_col4.metric("Total EAD", money(credit_metrics["total_ead"]))
+
+credit_col5, credit_col6, credit_col7 = st.columns(3)
+credit_col5.metric("Expected Loss", money(credit_metrics["expected_loss"]))
+credit_col6.metric("Stressed Expected Loss", money(credit_metrics["stressed_expected_loss"]))
+credit_col7.metric("Average Recovery Rate", pct(credit_metrics["average_recovery_rate"]))
+
+left, right = st.columns(2)
+with left:
+    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+    chart_shell("Loans by delinquency bucket", "Distribucion de morosidad: current, 30, 60, 90 y NPL.")
+    st.altair_chart(credit_bucket_chart(credit_table), use_container_width=True, theme=None)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with right:
+    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+    chart_shell("Expected Loss by product type", "PD x EAD x LGD agregado por producto.")
+    st.altair_chart(expected_loss_by_product_chart(credit_table), use_container_width=True, theme=None)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+st.subheader("Credit risk loan table")
+st.dataframe(
+    credit_table[
+        [
+            "loan_id",
+            "customer_id",
+            "product_type",
+            "days_past_due",
+            "delinquency_bucket",
+            "pd",
+            "ead",
+            "lgd",
+            "expected_loss",
+            "npl_flag",
+            "early_warning_flag",
+        ]
+    ],
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "pd": st.column_config.NumberColumn("pd", format="%.2%"),
+        "ead": st.column_config.NumberColumn("ead", format="EUR %.2f"),
+        "lgd": st.column_config.NumberColumn("lgd", format="%.2%"),
+        "expected_loss": st.column_config.NumberColumn("expected_loss", format="EUR %.2f"),
+    },
+)
+
+with st.expander("Stress recalculation detail", expanded=False):
+    st.dataframe(
+        credit_table[
+            [
+                "loan_id",
+                "pd",
+                "stressed_pd",
+                "ead",
+                "lgd",
+                "expected_loss",
+                "stressed_expected_loss",
+            ]
+        ].sort_values("stressed_expected_loss", ascending=False),
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "pd": st.column_config.NumberColumn("pd", format="%.2%"),
+            "stressed_pd": st.column_config.NumberColumn("stressed_pd", format="%.2%"),
+            "ead": st.column_config.NumberColumn("ead", format="EUR %.2f"),
+            "lgd": st.column_config.NumberColumn("lgd", format="%.2%"),
+            "expected_loss": st.column_config.NumberColumn("expected_loss", format="EUR %.2f"),
+            "stressed_expected_loss": st.column_config.NumberColumn("stressed_expected_loss", format="EUR %.2f"),
+        },
+    )
+
+st.subheader("Credit data quality")
+quality_cards(credit_dq_summary)
+st.dataframe(credit_dq_summary, use_container_width=True, hide_index=True)
+
+section("07 / Interview Mode", "How to explain this demo")
 st.markdown(
     """
     <div class="script-box">
@@ -919,6 +1072,11 @@ st.markdown(
             La limitacion principal es que es un prototipo junior con datos ficticios y reglas fijas. No es
             un modelo regulatorio, no toma decisiones reales y siempre requeriria revision humana y mas
             contexto de negocio.
+        </p>
+        <p>
+            La capa de credito complementa la demo AML: permite explicar NPL, PD, EAD, LGD, Expected Loss,
+            tasas de recuperacion y un stress test simple sin mezclar esos conceptos con
+            deteccion de blanqueo.
         </p>
     </div>
     """,

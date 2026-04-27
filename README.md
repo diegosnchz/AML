@@ -29,6 +29,7 @@ The repository is aimed at junior roles such as:
 - Generates account-level and transaction-level features.
 - Applies a small set of explainable rule-based detection scenarios.
 - Produces an alerts CSV ready for analyst review or a simple dashboard.
+- Adds a small educational Credit Risk Reporting layer for interview practice.
 
 ## Detection Rules
 
@@ -98,12 +99,14 @@ python src/ingest_data.py
 python src/clean_data.py
 python src/generate_features.py
 python src/detect_alerts.py
+python src/credit_risk_metrics.py
 ```
 
 Input files:
 
 - `data/raw/accounts.csv`
 - `data/raw/transactions.csv`
+- `data/raw/loans.csv`
 
 Generated files:
 
@@ -113,6 +116,7 @@ Generated files:
 - `data/processed/transactions_clean.csv`
 - `data/processed/account_features.csv`
 - `data/processed/transaction_features.csv`
+- `data/processed/credit_risk_metrics.csv`
 - `outputs/alerts_sample.csv`
 
 ## Risk Reporting & BI Demo
@@ -127,6 +131,7 @@ What it shows:
 - risk/reporting KPIs,
 - visual monitoring charts,
 - an alert review table with business-friendly reason codes,
+- an educational Credit Risk Reporting section for NPL, PD/EAD/LGD, Expected Loss and stress testing,
 - a short Spanish interview script inside the dashboard.
 
 Technologies used:
@@ -147,6 +152,7 @@ python src/ingest_data.py
 python src/clean_data.py
 python src/generate_features.py
 python src/detect_alerts.py
+python src/credit_risk_metrics.py
 
 streamlit run app.py
 ```
@@ -158,6 +164,23 @@ http://localhost:8501
 ```
 
 The demo is intentionally small and explainable. It uses synthetic data and fixed rules so it can be presented in a 2-3 minute interview walkthrough.
+
+## Credit Risk Reporting Interview Layer
+
+The main project is still **AML Transaction Monitoring Analytics**. The credit risk work is a small educational interview layer added on top of the existing Python/Streamlit project, not a replacement for the AML pipeline and not a third project.
+
+It uses `data/raw/loans.csv` and `src/credit_risk_metrics.py` to calculate:
+
+- loans and delinquency buckets for 30/60/90 day monitoring,
+- Non-Performing Loans (NPL) with `days_past_due > 90`,
+- early warning loans with `30 <= days_past_due <= 90`,
+- PD, EAD and LGD,
+- Expected Loss as `PD * EAD * LGD`,
+- recovery rate as `recovered_amount / EAD`,
+- a simple stress multiplier applied to PD,
+- KRIs and operational-risk-style data quality checks for the loan dataset.
+
+This layer is deliberately junior-friendly and explainable. It is not a regulatory credit risk engine, not a production banking model, and does not include Altman Z-score, new SHAP, new ML scoring, complex VaR, Airflow, dbt, databases, graph analytics or real macroeconomic modelling.
 
 ## Outputs
 
