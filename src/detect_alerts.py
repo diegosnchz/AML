@@ -16,6 +16,13 @@ FAN_MIN_COUNTERPARTIES = 5
 
 HIGH_RISK_COUNTRIES = {"IRAN", "MYANMAR", "DPRK", "SYRIA", "YEMEN"}
 
+REASON_CODES = {
+    "SMURFING": "Potential structuring pattern",
+    "FAN_IN": "Repeated transactions in short period",
+    "FAN_OUT": "Unusual transaction pattern",
+    "HIGH_RISK_GEOGRAPHY": "High-risk rule match",
+}
+
 
 def make_alert_id(account_id: str, rule_name: str, window_end: pd.Timestamp) -> str:
     raw = f"{account_id}|{rule_name}|{window_end.isoformat()}"
@@ -28,6 +35,10 @@ def severity_from_count(count: int) -> str:
     if count >= 5:
         return "MEDIUM"
     return "LOW"
+
+
+def reason_code_for_rule(rule_name: str) -> str:
+    return REASON_CODES.get(rule_name, "Unusual transaction pattern")
 
 
 def build_alert(
@@ -46,8 +57,11 @@ def build_alert(
         "alert_id": make_alert_id(account_id, rule_name, window_end),
         "account_id": account_id,
         "rule_name": rule_name,
+        "rule_triggered": rule_name,
         "severity": severity,
+        "reason_code": reason_code_for_rule(rule_name),
         "reason": reason,
+        "status": "Open for review",
         "metric_1_name": metric_1_name,
         "metric_1_value": metric_1_value,
         "metric_2_name": metric_2_name,

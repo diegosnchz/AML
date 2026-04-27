@@ -115,6 +115,50 @@ Generated files:
 - `data/processed/transaction_features.csv`
 - `outputs/alerts_sample.csv`
 
+## Risk Reporting & BI Demo
+
+This repository also includes a small Streamlit dashboard called **Risk Reporting & BI Demo**. It is designed as a personal/academic interview demo, not as a real banking system.
+
+What it shows:
+
+- a simple transactional data pipeline,
+- basic data quality checks,
+- explainable rule-based alerts,
+- risk/reporting KPIs,
+- visual monitoring charts,
+- an alert review table with business-friendly reason codes,
+- a short Spanish interview script inside the dashboard.
+
+Technologies used:
+
+- Python
+- Pandas
+- Streamlit
+- CSV files
+
+Run it from the repository root:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+python src/ingest_data.py
+python src/clean_data.py
+python src/generate_features.py
+python src/detect_alerts.py
+
+streamlit run app.py
+```
+
+Then open the local Streamlit URL shown in the terminal, usually:
+
+```text
+http://localhost:8501
+```
+
+The demo is intentionally small and explainable. It uses synthetic data and fixed rules so it can be presented in a 2-3 minute interview walkthrough.
+
 ## Outputs
 
 The final alerts table contains:
