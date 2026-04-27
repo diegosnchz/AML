@@ -58,7 +58,7 @@ def clean_transactions(transactions: pd.DataFrame) -> pd.DataFrame:
 
     text_columns = ["transaction_id", "sender_account_id", "receiver_account_id"]
     for column in text_columns:
-        transactions[column] = transactions[column].astype(str).str.strip()
+        transactions[column] = transactions[column].fillna("").astype(str).str.strip()
 
     transactions["currency"] = transactions["currency"].fillna("EUR").astype(str).str.upper().str.strip()
     transactions["transaction_type"] = (
